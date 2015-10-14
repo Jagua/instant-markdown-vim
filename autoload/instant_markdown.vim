@@ -30,14 +30,16 @@ function! s:update_markdown()
     let current_buffer = current_buffer == '' ? ' ' : current_buffer
     let url = s:BASE_URL . s:find_var('instant_markdown_path', '/markdown')
     call s:setbufvar('posted_url', url)
-    let cmd = "curl -X POST --data-urlencode 'file@-' ".shellescape(url)." &>/dev/null"
+    let cmd = "curl -X POST --data-urlencode ".shellescape("file@-")." ".shellescape(url).(has("win32") ? " > nul 2>&1" : " &>/dev/null")
     if firstpost
       " Execute curl command as foreground at first POST.
       redraw
       echon 'instant-markdown: checking '''
       \   . s:host.':'.s:port.''' is alive...'
     else
-      let cmd .= ' &'
+      if !has('win32')
+        let cmd .= ' &'
+      endif
     endif
     call system(cmd, current_buffer)
     if firstpost
@@ -128,7 +130,7 @@ function! instant_markdown#close()
     echohl None
     return
   endif
-  silent! exec "silent! !curl -s -X DELETE " . shellescape(url) . " &>/dev/null &"
+  silent! exec "silent! !curl -s -X DELETE " . shellescape(url) . (has("win32") ? " > nul 2>&1" : " &>/dev/null &")
 endfunction
 
 
